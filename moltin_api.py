@@ -1,5 +1,6 @@
 import os
 import json
+from textwrap import dedent
 
 import requests
 from dotenv import load_dotenv
@@ -15,17 +16,8 @@ def get_access_token(client_id, client_secret):
     return response.json().get('access_token')
 
 
-def get_cart_items(access_token):
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-    }
-
-    response = requests.get('https://api.moltin.com/v2/carts/zxcvbnma/items', headers=headers)
-    print(response.json())
-
-
-def add_product_to_cart(access_token, id):
-    url = 'https://api.moltin.com/v2/carts/zxcvbnma/items'
+def add_product_to_cart(access_token, cart_id, product_id, quantity):
+    url = f'https://api.moltin.com/v2/carts/{cart_id}/items'
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Content-Type': 'application/json',
@@ -33,16 +25,46 @@ def add_product_to_cart(access_token, id):
 
     data = {
         'data': {
-            'id': id,
+            'id': product_id,
             'type': 'cart_item',
-            'quantity': 1
+            'quantity': quantity
         }
     }
     response = requests.post(url, headers=headers, json=data)
-    if response.ok:
-        print('Продукт успешно добавлен в корзину!')
-    else:
-        print(f'Ошибка при добавлении продукта в корзину: {response.text}')
+    response.raise_for_status()
+
+
+def remove_product_from_cart(access_token, cart_id, product_id):
+    url = f'https://api.moltin.com/v2/carts/{cart_id}/items/{product_id}'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+
+    response = requests.delete(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+
+def get_cart_products(access_token, cart_id):
+    url = f'https://api.moltin.com/v2/carts/{cart_id}/items'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json',
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+
+def get_cart_total(access_token, cart_id):
+    url = f'https://api.moltin.com/v2/carts/{cart_id}/'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json',
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()['data']['meta']['display_price']['with_tax']['formatted']
 
 
 def get_all_products(access_token):
@@ -50,6 +72,7 @@ def get_all_products(access_token):
         'Authorization': f'Bearer {access_token}',
     }
     response = requests.get('https://api.moltin.com/pcm/products', headers=headers)
+    response.raise_for_status()
     return response.json()
 
 
@@ -86,11 +109,23 @@ def get_img_url(access_token, prod_id):
     return response.json()['data']['link']['href']
 
 
-if __name__ == '__main__':
-    load_dotenv()
-    client_id = os.getenv('CLIENT_ID')
-    client_secret = os.getenv('CLIENT_SECRET')
-    get_access_token(client_id, client_secret)
-    moltin_token = get_access_token(client_id, client_secret)
-    img_id = get_img_id(moltin_token, 'ec4f7d90-793d-430f-9bc4-2e1fdd3adeba')
-    print(get_img_url(moltin_token, img_id))
+def create_customer(access_token, user_name, user_email):
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json',
+    }
+
+    json_data = {
+        'data': {
+            'type': 'customer',
+            'name': user_name,
+            'email': user_email,
+        },
+    }
+    response = requests.post(
+        'https://api.moltin.com/v2/customers',
+        headers=headers,
+        json=json_data
+    )
+    response.raise_for_status()
+
