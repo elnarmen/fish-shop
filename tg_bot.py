@@ -9,10 +9,6 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageH
 
 from moltin_api import *
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 
 def get_products_keyboard(update, congext):
     products_descriptions = get_all_products(congext.bot_data['moltin_token'])
