@@ -5,7 +5,7 @@
 
 ![gif](https://dvmn.org/filer/canonical/1569215892/326/)
 
-[Ссылка на работающий бот](t.me/elnar_fish_store_bot)
+[Ссылка на работающий бот](https://t.me/elnar_fish_store_bot)
 
 Скачайте код:
 ```sh
