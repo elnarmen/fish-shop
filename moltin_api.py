@@ -1,12 +1,23 @@
 import os
 import json
+import time
 from textwrap import dedent
 
 import requests
 from dotenv import load_dotenv
 
 
+MOLTIN_TOKEN_EXPIRES_TIME = 0
+MOLTIN_TOKEN = None
+
+
 def get_access_token(client_id, client_secret):
+    global MOLTIN_TOKEN_EXPIRES_TIME
+    global MOLTIN_TOKEN
+
+    if time.time() <= MOLTIN_TOKEN_EXPIRES_TIME:
+        return MOLTIN_TOKEN
+
     data = {
         'grant_type': 'client_credentials',
         'client_id': client_id,
@@ -14,7 +25,9 @@ def get_access_token(client_id, client_secret):
     }
     response = requests.post('https://api.moltin.com/oauth/access_token', data=data)
     response.raise_for_status()
-    return response.json().get('access_token')
+    MOLTIN_TOKEN_EXPIRES_TIME = response.json().get('expires')
+    MOLTIN_TOKEN = response.json().get('access_token')
+    return MOLTIN_TOKEN
 
 
 def add_product_to_cart(client_id, client_secret, cart_id, product_id, quantity):
