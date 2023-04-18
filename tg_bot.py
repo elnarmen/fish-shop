@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 
-from moltin_api import *
-
+from moltin_api import get_access_token, add_product_to_cart, remove_product_from_cart, create_customer
+from moltin_api import get_all_products, get_cart_total, get_cart_products, get_product_by_id, get_img_url
 
 def get_products_keyboard(update, congext):
     products_descriptions = get_all_products(congext.bot_data['moltin_token'])

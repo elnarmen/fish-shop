@@ -13,6 +13,7 @@ def get_access_token(client_id, client_secret):
         'client_secret': client_secret,
     }
     response = requests.post('https://api.moltin.com/oauth/access_token', data=data)
+    response.raise_for_status()
     return response.json().get('access_token')
 
 
@@ -115,7 +116,7 @@ def create_customer(access_token, user_name, user_email):
         'Content-Type': 'application/json',
     }
 
-    json_data = {
+    data = {
         'data': {
             'type': 'customer',
             'name': user_name,
@@ -125,7 +126,7 @@ def create_customer(access_token, user_name, user_email):
     response = requests.post(
         'https://api.moltin.com/v2/customers',
         headers=headers,
-        json=json_data
+        json=data
     )
     response.raise_for_status()
 
