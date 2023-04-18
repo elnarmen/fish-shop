@@ -11,7 +11,10 @@ from moltin_api import get_access_token, add_product_to_cart, remove_product_fro
 from moltin_api import get_all_products, get_cart_total, get_cart_products, get_product_by_id, get_img_url
 
 def get_products_keyboard(update, congext):
-    products_descriptions = get_all_products(congext.bot_data['moltin_token'])
+    products_descriptions = get_all_products(
+        congext.bot_data['client_id'],
+        congext.bot_data['client_secret']
+    )
     congext.bot_data['products_descriptions'] = products_descriptions
     keyboard = []
     for product in products_descriptions['data']:
@@ -57,13 +60,14 @@ def handle_menu(update, context):
     query = update.callback_query
     product_id = query['data']
     context.bot_data['product_id'] = product_id
-    moltin_token = context.bot_data.get('moltin_token')
-    selected_product = get_product_by_id(moltin_token, product_id)['data']
+    client_id = context.bot_data.get('client_id')
+    client_secret = context.bot_data.get('client_secret')
+    selected_product = get_product_by_id(client_id, client_secret, product_id)['data']
 
     product_price = \
         selected_product['meta']['display_price']['without_tax']['formatted']
     product_amount = selected_product['meta']['display_price']['without_tax']['amount']
-    product_image_url = get_img_url(moltin_token, product_id)
+    product_image_url = get_img_url(client_id, client_secret, product_id)
     chat_id = update.effective_chat.id
 
     text = dedent(
@@ -107,7 +111,8 @@ def handle_description(update, context):
     if query['data'] == 'cart':
         return 'HANDLE_CART'
     add_product_to_cart(
-        access_token=context.bot_data['moltin_token'],
+        client_id=context.bot_data['client_id'],
+        client_secret=context.bot_data['client_secret'],
         cart_id=cart_id,
         product_id=context.bot_data['product_id'],
         quantity=int(query['data'])
@@ -116,8 +121,8 @@ def handle_description(update, context):
     return 'HANDLE_DESCRIPTION'
 
 
-def send_cart_contents(update, context, moltin_token, cart_id):
-    cart_products = get_cart_products(moltin_token, cart_id)
+def send_cart_contents(update, context, client_id, client_secret, cart_id):
+    cart_products = get_cart_products(client_id, client_secret, cart_id)
     message_text = ''
     keyboard = []
     for product in cart_products['data']:
@@ -141,7 +146,7 @@ def send_cart_contents(update, context, moltin_token, cart_id):
         )
     keyboard.append([InlineKeyboardButton('В меню', callback_data='/start')])
     keyboard.append([InlineKeyboardButton('Оплатить', callback_data='payment')])
-    message_text += f'Общая стоимость: {get_cart_total(moltin_token, cart_id)}'
+    message_text += f'Общая стоимость: {get_cart_total(client_id, client_secret, cart_id)}'
     reply_markup = InlineKeyboardMarkup(keyboard)
     context.bot.send_message(
         chat_id=cart_id,
@@ -156,16 +161,17 @@ def send_cart_contents(update, context, moltin_token, cart_id):
 
 def handle_cart(update, context):
     query = update.callback_query
-    moltin_token = context.bot_data['moltin_token']
+    client_id = context.bot_data['client_id']
+    client_secret = context.bot_data['client_secret']
     cart_id = update.effective_chat.id
     if query['data'] == 'cart':
-        send_cart_contents(update, context, moltin_token, cart_id)
+        send_cart_contents(update, context, client_id, client_secret, cart_id)
     elif query['data'] == 'payment':
         waiting_email(update, context)
         return 'WAITING_EMAIL'
     else:
-        remove_product_from_cart(moltin_token, cart_id, query['data'])
-        send_cart_contents(update, context, moltin_token, cart_id)
+        remove_product_from_cart(client_id, client_secret, cart_id, query['data'])
+        send_cart_contents(update, context, client_id, client_secret, cart_id)
     return 'HANDLE_CART'
 
 
@@ -178,7 +184,8 @@ def waiting_email(update, context):
         chat_id = update.effective_chat.id
         user_name = update.message['chat']['username']
         create_customer(
-            access_token=context.bot_data['moltin_token'],
+            client_id=context.bot_data['client_id'],
+            client_secret=context.bot_data['client_secret'],
             user_name=f'Никнейм: {user_name}, chat_id: {chat_id}',
             user_email=update.message.text
         )
@@ -235,11 +242,12 @@ def main():
     load_dotenv()
     updater = Updater(os.getenv('TG_TOKEN'))
     dispatcher = updater.dispatcher
-    access_token = get_access_token(os.getenv('CLIENT_ID'), os.getenv('CLIENT_SECRET'))
 
-    redis_host = os.getenv("REDIS_HOST")
-    redis_port = os.getenv("REDIS_PORT")
-    redis_password = os.getenv("REDIS_PASSWORD")
+    client_id = os.getenv('CLIENT_ID')
+    client_secret = os.getenv('CLIENT_SECRET')
+    redis_host = os.getenv('REDIS_HOST')
+    redis_port = os.getenv('REDIS_PORT')
+    redis_password = os.getenv('REDIS_PASSWORD')
     redis_connection = redis.Redis(
         host=redis_host,
         port=redis_port,
@@ -249,7 +257,8 @@ def main():
     )
 
     dispatcher.bot_data['db_connection'] = redis_connection
-    dispatcher.bot_data['moltin_token'] = access_token
+    dispatcher.bot_data['client_id'] = client_id
+    dispatcher.bot_data['client_secret'] = client_secret
 
     dispatcher.add_handler(CallbackQueryHandler(handle_users_reply))
     dispatcher.add_handler(MessageHandler(Filters.text, handle_users_reply))

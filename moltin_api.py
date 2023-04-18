@@ -17,7 +17,8 @@ def get_access_token(client_id, client_secret):
     return response.json().get('access_token')
 
 
-def add_product_to_cart(access_token, cart_id, product_id, quantity):
+def add_product_to_cart(client_id, client_secret, cart_id, product_id, quantity):
+    access_token = get_access_token(client_id, client_secret)
     url = f'https://api.moltin.com/v2/carts/{cart_id}/items'
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -35,7 +36,8 @@ def add_product_to_cart(access_token, cart_id, product_id, quantity):
     response.raise_for_status()
 
 
-def remove_product_from_cart(access_token, cart_id, product_id):
+def remove_product_from_cart(client_id, client_secret, cart_id, product_id):
+    access_token = get_access_token(client_id, client_secret)
     url = f'https://api.moltin.com/v2/carts/{cart_id}/items/{product_id}'
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -46,7 +48,8 @@ def remove_product_from_cart(access_token, cart_id, product_id):
     return response.json()
 
 
-def get_cart_products(access_token, cart_id):
+def get_cart_products(client_id, client_secret, cart_id):
+    access_token = get_access_token(client_id, client_secret)
     url = f'https://api.moltin.com/v2/carts/{cart_id}/items'
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -57,7 +60,8 @@ def get_cart_products(access_token, cart_id):
     return response.json()
 
 
-def get_cart_total(access_token, cart_id):
+def get_cart_total(client_id, client_secret, cart_id):
+    access_token = get_access_token(client_id, client_secret)
     url = f'https://api.moltin.com/v2/carts/{cart_id}/'
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -68,7 +72,8 @@ def get_cart_total(access_token, cart_id):
     return response.json()['data']['meta']['display_price']['with_tax']['formatted']
 
 
-def get_all_products(access_token):
+def get_all_products(client_id, client_secret):
+    access_token = get_access_token(client_id, client_secret)
     headers = {
         'Authorization': f'Bearer {access_token}',
     }
@@ -77,7 +82,8 @@ def get_all_products(access_token):
     return response.json()
 
 
-def get_product_by_id(access_token, product_id):
+def get_product_by_id(client_id, client_secret, product_id):
+    access_token = get_access_token(client_id, client_secret)
     url = f'https://api.moltin.com/catalog/products/{product_id}'
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -87,7 +93,8 @@ def get_product_by_id(access_token, product_id):
     return response.json()
 
 
-def get_img_id(access_token, prod_id):
+def get_img_id(client_id, client_secret, prod_id):
+    access_token = get_access_token(client_id, client_secret)
     url = f'https://api.moltin.com/pcm/products/{prod_id}/relationships/main_image'
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -97,8 +104,9 @@ def get_img_id(access_token, prod_id):
     return response.json()['data']['id']
 
 
-def get_img_url(access_token, prod_id):
-    img_id = get_img_id(access_token, prod_id)
+def get_img_url(client_id, client_secret, prod_id):
+    access_token = get_access_token(client_id, client_secret)
+    img_id = get_img_id(client_id, client_secret, prod_id)
     url = f'https://api.moltin.com/v2/files/{img_id}'
 
     headers = {
@@ -110,7 +118,8 @@ def get_img_url(access_token, prod_id):
     return response.json()['data']['link']['href']
 
 
-def create_customer(access_token, user_name, user_email):
+def create_customer(client_id, client_secret, user_name, user_email):
+    access_token = get_access_token(client_id, client_secret)
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Content-Type': 'application/json',
@@ -129,4 +138,3 @@ def create_customer(access_token, user_name, user_email):
         json=data
     )
     response.raise_for_status()
-
