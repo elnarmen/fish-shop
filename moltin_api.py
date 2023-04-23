@@ -25,9 +25,9 @@ def get_access_token(client_id, client_secret):
     }
     response = requests.post('https://api.moltin.com/oauth/access_token', data=data)
     response.raise_for_status()
-    decoded_responce = response.json()
-    MOLTIN_TOKEN_EXPIRES_TIME = decoded_responce.get('expires')
-    MOLTIN_TOKEN = decoded_responce.get('access_token')
+    token_details = response.json()
+    MOLTIN_TOKEN_EXPIRES_TIME = token_details.get('expires')
+    MOLTIN_TOKEN = token_details.get('access_token')
     return MOLTIN_TOKEN
 
 
